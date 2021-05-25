@@ -73,7 +73,7 @@ class Structure:
             raise ValueError("Expected tripels of cartesian coordinates")
 
         if 3 * numbers.size != positions.size:
-            raise ValueError("Dimension missmatch between numbers and positions")
+            raise ValueError("Dimension mismatch between numbers and positions")
 
         self._natoms = len(numbers)
         _numbers = np.ascontiguousarray(numbers, dtype="i4")
@@ -128,7 +128,7 @@ class Structure:
         """
 
         if 3 * len(self) != positions.size:
-            raise ValueError("Dimension missmatch for positions")
+            raise ValueError("Dimension mismatch for positions")
         _positions = np.ascontiguousarray(positions, dtype="float")
 
         if lattice is not None:
@@ -218,7 +218,7 @@ class DampingParam:
         Create damping function API object from user provided parameters.
         This object represent a rational damping function and requires
         at least the 's8', 'a1', and 'a2' parameters as input.
-        Additonally, the parameters 's6', 's9', and 'alp' can be overwritten.
+        Additionally, the parameters 's6', 's9', and 'alp' can be overwritten.
         The user provided damping parameters will be used unchecked.
 
         Example
@@ -240,7 +240,7 @@ class DispersionModel(Structure):
 
     Representation of a dispersion model to evaluate C6 coefficients.
     The model is coupled to the molecular structure it has been created
-    from and cannot be transfered to another molecular structure without
+    from and cannot be transferred to another molecular structure without
     recreating it.
 
     Example

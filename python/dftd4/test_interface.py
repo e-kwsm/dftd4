@@ -79,7 +79,7 @@ def test_structure() -> None:
         Structure(numbers, np.zeros((24, 3)))
 
     # The Python class should protect from garbage input like this
-    with raises(ValueError, match="Dimension missmatch"):
+    with raises(ValueError, match="Dimension mismatch"):
         Structure(np.array([1, 1, 1]), positions)
 
     # Also check for sane coordinate input
@@ -89,11 +89,11 @@ def test_structure() -> None:
     # Construct real molecule
     mol = Structure(numbers, positions)
 
-    # Try to update a structure with missmatched coordinates
-    with raises(ValueError, match="Dimension missmatch for positions"):
+    # Try to update a structure with mismatched coordinates
+    with raises(ValueError, match="Dimension mismatch for positions"):
         mol.update(np.random.rand(7))
 
-    # Try to add a missmatched lattice
+    # Try to add a mismatched lattice
     with raises(ValueError, match="Invalid lattice provided"):
         mol.update(positions, np.random.rand(7))
 
