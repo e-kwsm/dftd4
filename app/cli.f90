@@ -63,7 +63,7 @@ contains
 
 subroutine get_arguments(config, error)
 
-   !> Configuation data
+   !> Configuration data
    class(cli_config), allocatable, intent(out) :: config
 
    !> Error handling
@@ -81,7 +81,7 @@ end subroutine get_arguments
 !> Read configuration for the single point driver
 subroutine get_run_arguments(config, error)
 
-   !> Configuation data
+   !> Configuration data
    type(run_config), intent(out) :: config
 
    !> Error handling
@@ -299,7 +299,7 @@ subroutine help(unit)
       "    --noedisp", "Disable writing of dispersion energy to .EDISP file", &
       "    --json [file]", "Dump results to JSON output (default: dftd4.json)", &
       "-v, --verbose", "Show more, can be used multiple times", &
-      "-s, --silent", "Show less, use twice to supress all output", &
+      "-s, --silent", "Show less, use twice to suppress all output", &
       "    --version", "Print program version and exit", &
       "    --citation", "Print citation information and exit", &
       "    --license", "Print license header and exit", &

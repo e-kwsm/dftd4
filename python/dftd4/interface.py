@@ -240,7 +240,7 @@ class DispersionModel(Structure):
 
     Representation of a dispersion model to evaluate C6 coefficients.
     The model is coupled to the molecular structure it has been created
-    from and cannot be transfered to another molecular structure without
+    from and cannot be transferred to another molecular structure without
     recreating it.
 
     Example
