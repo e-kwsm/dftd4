@@ -31,6 +31,7 @@ module dftd4_api
    use dftd4_model_d4s, only : d4s_model, new_d4s_model
    use dftd4_numdiff, only: get_dispersion_hessian
    use dftd4_param, only : get_rational_damping
+   use dftd4_partition, only : new_work_partition, work_partition
    use dftd4_utils, only : wrap_to_central_cell
    use dftd4_version, only : get_dftd4_version
    use mctc_env, only : wp, error_type, fatal_error
@@ -50,12 +51,14 @@ module dftd4_api
    public :: new_d4_model_api, custom_d4_model_api, delete_model_api
    public :: new_d4s_model_api, custom_d4s_model_api
    public :: set_model_realspace_cutoff_api, set_model_realspace_cutoff_smooth_api
+   public :: set_model_work_partition_api
 
    public :: vp_param
    public :: new_rational_damping_api , load_rational_damping_api
    public :: delete_param_api
 
-   public :: get_dispersion_api, get_pairwise_dispersion_api, get_properties_api, get_numerical_hessian_api
+   public :: get_dispersion_api
+   public :: get_pairwise_dispersion_api, get_properties_api, get_numerical_hessian_api
 
    !> Namespace for C routines
    character(len=*), parameter :: namespace = "dftd4_"
@@ -79,6 +82,9 @@ module dftd4_api
 
       !> Realspace cutoff used by C API calculation entry points
       type(realspace_cutoff) :: cutoff
+
+      !> Work partition of the interaction loops
+      type(work_partition) :: partition
    end type vp_model
 
    !> Void pointer to damping parameters
@@ -544,6 +550,34 @@ subroutine set_model_realspace_cutoff_smooth_api(verror, vdisp, disp2, disp3, cn
 end subroutine set_model_realspace_cutoff_smooth_api
 
 
+!> Assign an externally managed part of the interaction loops to this model.
+!>
+!> Parts are zero based, summing the results of all parts reproduces the
+!> complete calculation.
+subroutine set_model_work_partition_api(verror, vdisp, part, nparts) &
+      & bind(C, name=namespace//"set_model_work_partition")
+   !DEC$ ATTRIBUTES DLLEXPORT :: set_model_work_partition_api
+   type(c_ptr), value :: verror
+   type(vp_error), pointer :: error
+   type(c_ptr), value :: vdisp
+   type(vp_model), pointer :: disp
+   integer(c_int), value, intent(in) :: part
+   integer(c_int), value, intent(in) :: nparts
+
+   if (.not.c_associated(verror)) return
+   call c_f_pointer(verror, error)
+
+   if (.not.c_associated(vdisp)) then
+      call fatal_error(error%ptr, "Dispersion model is missing")
+      return
+   end if
+   call c_f_pointer(vdisp, disp)
+
+   call new_work_partition(error%ptr, disp%partition, int(part), int(nparts))
+
+end subroutine set_model_work_partition_api
+
+
 !> Create new rational damping parameters
 function new_rational_damping_api(verror, s6, s8, s9, a1, a2, alp) &
       & result(vparam) &
@@ -705,10 +739,9 @@ subroutine get_dispersion_api(verror, vmol, vdisp, vparam, &
       allocate(sigma(3,3))
    end if
 
-   ! Evaluate energy, gradient (optional), and
-   ! sigma (optional) analytically
+   ! Evaluate energy, gradient (optional), and sigma (optional) analytically
    call get_dispersion(mol%ptr, disp%ptr, param%ptr, disp%cutoff, &
-      & energy, gradient, sigma)
+      & energy, gradient, sigma, partition=disp%partition)
 
    if (has_grad) then
       c_gradient(:3, :mol%ptr%nat) = gradient
@@ -771,7 +804,7 @@ subroutine get_numerical_hessian_api(verror, vmol, vdisp, &
    hessian = reshape(c_hessian(:9*nat_sq), &
                     &[3, mol%ptr%nat, 3, mol%ptr%nat])
    call get_dispersion_hessian(mol%ptr, disp%ptr, param%ptr, &
-      & disp%cutoff, hessian)
+      & disp%cutoff, hessian, disp%partition)
    c_hessian(:9*nat_sq) = reshape(hessian, [9*nat_sq])
 
 end subroutine get_numerical_hessian_api

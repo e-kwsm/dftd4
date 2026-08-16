@@ -23,6 +23,7 @@ module dftd4_disp
    use dftd4_data, only : get_covalent_rad
    use dftd4_model, only : dispersion_model
    use dftd4_ncoord, only : get_coordination_number, add_coordination_number_derivs
+   use dftd4_partition, only : work_partition
    use mctc_env, only : wp, error_type
    use mctc_io, only : structure_type
    use mctc_io_convert, only : autoaa
@@ -37,7 +38,7 @@ contains
 
 
 !> Wrapper to handle the evaluation of dispersion energy and derivatives
-subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma)
+subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma, partition)
    !DEC$ ATTRIBUTES DLLEXPORT :: get_dispersion
 
    !> Molecular structure data
@@ -60,6 +61,9 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma)
 
    !> Dispersion virial
    real(wp), intent(out), contiguous, optional :: sigma(:, :)
+
+   !> Optional externally assigned work partition
+   type(work_partition), intent(in), optional :: partition
 
    logical :: grad
    integer :: mref
@@ -110,8 +114,9 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma)
    end if
 
    call get_lattice_points(mol%periodic, mol%lattice, cutoff%disp2, lattr)
-   call param%get_dispersion2(mol, lattr, cutoff%disp2, cutoff%width2, disp%r4r2, &
-      & c6, dc6dcn, dc6dq, energies, dEdcn, dEdq, gradient, sigma)
+   call param%get_dispersion2(mol, lattr, cutoff%disp2, cutoff%width2, &
+      & disp%r4r2, c6, dc6dcn, dc6dq, energies, dEdcn, dEdq, gradient, &
+      & sigma, partition)
    if (grad) then
       call d4_gemv(dqdr, dEdq, gradient, beta=1.0_wp)
       call d4_gemv(dqdL, dEdq, sigma, beta=1.0_wp)
@@ -122,8 +127,9 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma)
    call disp%get_atomic_c6(mol, gwvec, gwdcn, gwdq, c6, dc6dcn, dc6dq)
 
    call get_lattice_points(mol%periodic, mol%lattice, cutoff%disp3, lattr)
-   call param%get_dispersion3(mol, lattr, cutoff%disp3, cutoff%width3, disp%r4r2, &
-      & c6, dc6dcn, dc6dq, energies, dEdcn, dEdq, gradient, sigma)
+   call param%get_dispersion3(mol, lattr, cutoff%disp3, cutoff%width3, &
+      & disp%r4r2, c6, dc6dcn, dc6dq, energies, dEdcn, dEdq, gradient, &
+      & sigma, partition)
    if (grad) then
       call add_coordination_number_derivs(mol, lattr, cutoff%cn, &
          & disp%rcov, disp%en, dEdcn, gradient, sigma)

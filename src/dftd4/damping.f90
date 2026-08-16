@@ -16,6 +16,7 @@
 
 !> Generic interface to define damping functions for the DFT-D4 model
 module dftd4_damping
+   use dftd4_partition, only : work_partition
    use mctc_env, only : wp
    use mctc_io, only : structure_type
    implicit none
@@ -44,8 +45,8 @@ module dftd4_damping
    abstract interface
       !> Evaluation of the dispersion energy expression
       subroutine dispersion_interface(self, mol, trans, cutoff, width, r4r2, &
-            & c6, dc6dcn, dc6dq, energy, dEdcn, dEdq, gradient, sigma)
-         import :: structure_type, damping_param, wp
+            & c6, dc6dcn, dc6dq, energy, dEdcn, dEdq, gradient, sigma, partition)
+         import :: structure_type, damping_param, work_partition, wp
 
          !> Damping parameters
          class(damping_param), intent(in) :: self
@@ -88,6 +89,9 @@ module dftd4_damping
 
          !> Dispersion virial
          real(wp), intent(inout), optional :: sigma(:, :)
+
+         !> Work partition of the atom pairs, defaults to the complete work
+         type(work_partition), intent(in), optional :: partition
       end subroutine dispersion_interface
 
       !> Evaluation of the pairwise representation of the dispersion energy
